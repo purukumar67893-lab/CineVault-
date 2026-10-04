@@ -108,13 +108,22 @@ export const Footer: React.FC = () => {
             <p className="text-[11px] leading-relaxed text-slate-400">
               CineVault respects intellectual property laws. We only index authorized streams, open-source film foundations (such as Blender Open Movie projects), trailers, and licensed metadata. We do not host, scrape, or distribute unauthorized copyrighted media.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <button 
                 onClick={() => setIsAdminOpen(true)}
                 className="text-[11px] text-slate-400 hover:text-white underline underline-offset-2"
               >
                 Publisher Portal Access
               </button>
+              <span className="text-slate-600">·</span>
+              <a 
+                href="https://console.cloud.google.com/run?project=439247631676"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1"
+              >
+                <span>Google Cloud Console</span>
+              </a>
             </div>
           </div>
 
@@ -125,7 +134,12 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} CineVault Portal · Designed & Published by <span className="font-semibold text-slate-200">Puru Kumar</span>. All rights reserved.
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live on Google Cloud Run
+            </span>
+            <span>·</span>
             <span>Verified Public-Domain & Open Media</span>
             <span>·</span>
             <span>Ultra Fast CDN Network</span>

@@ -12,7 +12,12 @@ import {
   Save, 
   Sparkles,
   Maximize,
-  Minimize
+  Minimize,
+  Cloud,
+  Globe,
+  ExternalLink,
+  Copy,
+  Server
 } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
 import { Movie, MovieCategory, MovieType } from '../types/movie';
@@ -30,9 +35,10 @@ export const AdminModal: React.FC = () => {
     user 
   } = useMovies();
 
-  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'stats'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'stats' | 'publish'>('list');
   const [editingMovieId, setEditingMovieId] = useState<string | null>(null);
   const [isModalMaximized, setIsModalMaximized] = useState(false);
+  const [copiedCloudUrl, setCopiedCloudUrl] = useState(false);
   const [adminSearch, setAdminSearch] = useState('');
   const [movieToDelete, setMovieToDelete] = useState<{
     id: string;
@@ -328,6 +334,15 @@ export const AdminModal: React.FC = () => {
               }`}
             >
               Analytics & Storage
+            </button>
+            <button
+              onClick={() => setActiveTab('publish')}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                activeTab === 'publish' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <Cloud className="h-3.5 w-3.5 text-sky-400" />
+              <span>Google Cloud & Publish</span>
             </button>
           </div>
 
@@ -935,6 +950,164 @@ export const AdminModal: React.FC = () => {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: GOOGLE CLOUD & PUBLISH DASHBOARD */}
+          {activeTab === 'publish' && (
+            <div className="space-y-6 animate-in fade-in">
+              {/* Cloud Status Banner */}
+              <div className="rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-950/40 via-indigo-950/30 to-[#0d121c] p-5 sm:p-6 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-inner">
+                      <Cloud className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                          Active & Live on Google Cloud Run
+                        </span>
+                      </div>
+                      <h3 className="font-display text-lg font-bold text-white mt-0.5">
+                        CineVault Production Service
+                      </h3>
+                      <p className="text-xs text-slate-300">
+                        Hosted on Google Cloud Run container infrastructure in region <code className="text-sky-300">asia-east1</code>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://ais-pre-4cdvxw64h635x5ltik52ek-439247631676.asia-east1.run.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-sky-950/40 transition-all active:scale-95"
+                    >
+                      <Globe className="h-4 w-4" />
+                      <span>Open Live Website</span>
+                      <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                    </a>
+
+                    <a
+                      href="https://console.cloud.google.com/run?project=439247631676"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors"
+                    >
+                      <Server className="h-4 w-4 text-sky-400" />
+                      <span>Google Cloud Console</span>
+                      <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Production URL copy box */}
+                <div className="mt-5 rounded-xl bg-slate-950/80 border border-slate-800 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                      Production Public Google URL
+                    </span>
+                    <span className="font-mono text-xs text-sky-300 break-all select-all">
+                      https://ais-pre-4cdvxw64h635x5ltik52ek-439247631676.asia-east1.run.app
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('https://ais-pre-4cdvxw64h635x5ltik52ek-439247631676.asia-east1.run.app');
+                      setCopiedCloudUrl(true);
+                      setTimeout(() => setCopiedCloudUrl(false), 3000);
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-lg bg-sky-600/30 hover:bg-sky-600 border border-sky-500/40 px-3.5 py-1.5 text-xs font-semibold text-sky-200 hover:text-white transition-all shrink-0"
+                  >
+                    {copiedCloudUrl ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        <span className="text-emerald-300">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>Copy Public Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Infrastructure Details Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                  <span className="text-xs text-slate-400">Google Cloud Project ID</span>
+                  <div className="font-mono text-sm font-bold text-white">439247631676</div>
+                  <div className="text-[11px] text-slate-400">Default AI Studio Cloud Project</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                  <span className="text-xs text-slate-400">Hosting Engine</span>
+                  <div className="text-sm font-bold text-sky-400">Google Cloud Run</div>
+                  <div className="text-[11px] text-slate-400">Auto-scaling Node.js & Vite Container</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                  <span className="text-xs text-slate-400">Publisher Identity</span>
+                  <div className="text-sm font-bold text-emerald-400">Puru Kumar</div>
+                  <div className="text-[11px] text-slate-400">purukumar67893@gmail.com</div>
+                </div>
+              </div>
+
+              {/* How to Manage in Google Cloud Console */}
+              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
+                <h4 className="font-display text-sm font-bold text-white flex items-center gap-2">
+                  <Server className="h-4 w-4 text-sky-400" />
+                  <span>How to Publish and Manage in Google Cloud Console</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="rounded-lg bg-slate-950/70 p-3.5 border border-slate-800/80 space-y-1.5">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600/30 text-indigo-400 text-[11px] font-bold">1</span>
+                    <h5 className="font-semibold text-white">Share from AI Studio</h5>
+                    <p className="text-slate-400 leading-relaxed text-[11px]">
+                      Click the <strong>Share</strong> button in the top-right corner of Google AI Studio to set access permissions or share directly with anyone.
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-slate-950/70 p-3.5 border border-slate-800/80 space-y-1.5">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600/30 text-indigo-400 text-[11px] font-bold">2</span>
+                    <h5 className="font-semibold text-white">Google Cloud Console Access</h5>
+                    <p className="text-slate-400 leading-relaxed text-[11px]">
+                      Open <a href="https://console.cloud.google.com/run?project=439247631676" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline">console.cloud.google.com</a> to view service metrics, CPU/memory scaling, and request logs.
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-slate-950/70 p-3.5 border border-slate-800/80 space-y-1.5">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600/30 text-indigo-400 text-[11px] font-bold">3</span>
+                    <h5 className="font-semibold text-white">Custom Domain Setup</h5>
+                    <p className="text-slate-400 leading-relaxed text-[11px]">
+                      In Google Cloud Console, navigate to <strong>Cloud Run &gt; Manage Custom Domains</strong> to connect your own domain (e.g. <code>cinevault.com</code>) with free Google-managed SSL.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400">
+                    Need direct Cloud Console overview?
+                  </span>
+                  <a
+                    href="https://console.cloud.google.com/?project=439247631676"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-semibold"
+                  >
+                    <span>Open Google Cloud Console Home</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </div>
             </div>

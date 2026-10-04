@@ -12,7 +12,8 @@ import {
   Flame,
   Film,
   Tv,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Cloud
 } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
 
@@ -149,6 +150,17 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenFilters }) =
           >
             <LinkIcon className="h-3.5 w-3.5 text-indigo-400" />
             <span className="hidden sm:inline">Link to Video</span>
+          </button>
+
+          {/* Google Cloud Live Status Indicator */}
+          <button
+            onClick={() => setIsAdminOpen(true)}
+            className="hidden md:flex items-center gap-1.5 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 px-2.5 py-1.5 text-[11px] font-semibold text-sky-300 hover:text-white border border-sky-500/30 transition-all shadow-sm"
+            title="Hosted & Live on Google Cloud Run - Click to view deployment details & Console"
+          >
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <Cloud className="h-3.5 w-3.5 text-sky-400" />
+            <span className="hidden xl:inline">Google Cloud</span>
           </button>
 
           {/* Filter Bar Launcher */}
