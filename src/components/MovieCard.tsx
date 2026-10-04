@@ -5,7 +5,8 @@ import {
   Star, 
   Bookmark, 
   Heart, 
-  Clock 
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { Movie } from '../types/movie';
 import { useMovies } from '../context/MovieContext';
@@ -24,10 +25,13 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
     toggleFavorite, 
     watchlist, 
     favorites, 
-    markAsViewed 
+    markAsViewed,
+    deleteMovie,
+    user
   } = useMovies();
 
   const [imgError, setImgError] = useState(false);
+  const [showCardDeleteConfirm, setShowCardDeleteConfirm] = useState(false);
   const isBookmarked = watchlist.includes(movie.id);
   const isFavorited = favorites.includes(movie.id);
 
@@ -55,6 +59,22 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(movie.id);
+  };
+
+  const handleStartDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowCardDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteMovie(movie.id);
+    setShowCardDeleteConfirm(false);
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowCardDeleteConfirm(false);
   };
 
   return (
@@ -126,6 +146,16 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
             >
               <Heart className={`h-3.5 w-3.5 ${isFavorited ? 'fill-white' : ''}`} />
             </button>
+
+            {user?.role === 'admin' && (
+              <button
+                onClick={handleStartDelete}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-600/80 hover:bg-rose-600 text-white shadow-lg transition-transform active:scale-95"
+                title="Delete Movie from Website"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
           <div className="text-center text-[11px] text-slate-300 flex items-center justify-center gap-1">
             <Clock className="h-3 w-3 text-slate-400" />
@@ -158,16 +188,53 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
         {/* Mobile-visible quick action bar */}
         <div className="flex sm:hidden items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] text-slate-400">
           <span className="truncate text-indigo-400 font-medium">{movie.category}</span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button onClick={handleDownloadDirect} className="p-1 text-emerald-400 hover:text-emerald-300">
               <Download className="h-3.5 w-3.5" />
             </button>
             <button onClick={handlePlayDirect} className="p-1 text-indigo-400 hover:text-indigo-300">
               <Play className="h-3.5 w-3.5 fill-indigo-400" />
             </button>
+            {user?.role === 'admin' && (
+              <button onClick={handleStartDelete} className="p-1 text-rose-400 hover:text-rose-300" title="Delete Movie">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* In-Card Delete Confirmation Overlay */}
+      {showCardDeleteConfirm && (
+        <div 
+          onClick={e => e.stopPropagation()} 
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/92 p-3 text-center animate-in fade-in"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600/20 text-rose-400 border border-rose-500/40 mb-2">
+            <Trash2 className="h-4 w-4" />
+          </div>
+          <p className="text-xs font-bold text-white mb-1 line-clamp-1">
+            Delete "{movie.title}"?
+          </p>
+          <p className="text-[10px] text-rose-300 mb-3">
+            Remove from catalog permanently
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleConfirmDelete}
+              className="rounded bg-rose-600 hover:bg-rose-500 px-3 py-1 text-xs font-bold text-white shadow"
+            >
+              Delete
+            </button>
+            <button
+              onClick={handleCancelDelete}
+              className="rounded bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-xs text-slate-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

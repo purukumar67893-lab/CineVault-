@@ -25,6 +25,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     searchHistory, 
     addSearchHistory, 
     clearSearchHistory, 
+    removeSearchHistoryItem,
     setActiveMovie, 
     markAsViewed 
   } = useMovies();
@@ -190,22 +191,40 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                       Recent Searches
                     </span>
                     <button
+                      type="button"
                       onClick={clearSearchHistory}
                       className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-400 transition-colors"
+                      title="Delete all recent searches"
                     >
                       <Trash2 className="h-3 w-3" />
-                      Clear
+                      <span>Clear All</span>
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {searchHistory.map((item, idx) => (
-                      <button
+                      <div
                         key={idx}
-                        onClick={() => handleSuggestionClick(item)}
-                        className="rounded-lg bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                        className="group/item flex items-center rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 transition-colors overflow-hidden"
                       >
-                        {item}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSuggestionClick(item)}
+                          className="px-3 py-1.5 hover:text-white hover:bg-slate-800/80 transition-colors"
+                        >
+                          {item}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSearchHistoryItem(item);
+                          }}
+                          className="px-2 py-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 border-l border-slate-800/80 transition-colors"
+                          title={`Delete "${item}" from history`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>

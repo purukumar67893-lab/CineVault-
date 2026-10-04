@@ -34,9 +34,14 @@ interface MovieContextType {
   // Library Actions
   toggleFavorite: (movieId: string) => void;
   toggleWatchlist: (movieId: string) => void;
+  clearWatchlist: () => void;
+  clearFavorites: () => void;
+  clearRecentlyViewed: () => void;
   markAsViewed: (movieId: string) => void;
+  removeFromRecentlyViewed: (movieId: string) => void;
   addSearchHistory: (query: string) => void;
   clearSearchHistory: () => void;
+  removeSearchHistoryItem: (item: string) => void;
 
   // Filters
   setFilter: (updates: Partial<FilterState>) => void;
@@ -69,7 +74,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Load movies from local storage or fallback to INITIAL_MOVIES
   const [movies, setMovies] = useState<Movie[]>(() => {
     try {
-      const saved = localStorage.getItem('cinevault_movies_v2');
+      const saved = localStorage.getItem('cinevault_movies_v3');
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -192,7 +197,7 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Persistence
   useEffect(() => {
-    localStorage.setItem('cinevault_movies_v2', JSON.stringify(movies));
+    localStorage.setItem('cinevault_movies_v3', JSON.stringify(movies));
   }, [movies]);
 
   useEffect(() => {
@@ -231,11 +236,27 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const clearWatchlist = () => {
+    setWatchlist([]);
+  };
+
+  const clearFavorites = () => {
+    setFavorites([]);
+  };
+
+  const clearRecentlyViewed = () => {
+    setRecentlyViewed([]);
+  };
+
   const markAsViewed = (movieId: string) => {
     setRecentlyViewed(prev => {
       const filtered = prev.filter(id => id !== movieId);
       return [movieId, ...filtered].slice(0, 20);
     });
+  };
+
+  const removeFromRecentlyViewed = (movieId: string) => {
+    setRecentlyViewed(prev => prev.filter(id => id !== movieId));
   };
 
   const addSearchHistory = (query: string) => {
@@ -249,6 +270,10 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const clearSearchHistory = () => {
     setSearchHistory([]);
+  };
+
+  const removeSearchHistoryItem = (itemToRemove: string) => {
+    setSearchHistory(prev => prev.filter(i => i !== itemToRemove));
   };
 
   const setFilter = (updates: Partial<FilterState>) => {
@@ -276,15 +301,39 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteMovie = (movieId: string) => {
-    setMovies(prev => prev.filter(m => m.id !== movieId));
+    setMovies(prev => {
+      const filtered = prev.filter(m => m.id !== movieId);
+      try {
+        localStorage.setItem('cinevault_movies_v3', JSON.stringify(filtered));
+      } catch (err) {
+        console.error('Failed to sync movies to storage:', err);
+      }
+      return filtered;
+    });
     if (activeMovie?.id === movieId) {
       setActiveMovie(null);
     }
+    if (playingMovie?.id === movieId) {
+      setPlayingMovie(null);
+    }
+    if (trailerMovie?.id === movieId) {
+      setTrailerMovie(null);
+    }
+    if (downloadMovie?.id === movieId) {
+      setDownloadMovie(null);
+    }
+    setFavorites(prev => prev.filter(id => id !== movieId));
+    setWatchlist(prev => prev.filter(id => id !== movieId));
+    setRecentlyViewed(prev => prev.filter(id => id !== movieId));
   };
 
   const resetToDefaults = () => {
     setMovies(INITIAL_MOVIES);
-    localStorage.setItem('cinevault_movies_v2', JSON.stringify(INITIAL_MOVIES));
+    try {
+      localStorage.setItem('cinevault_movies_v3', JSON.stringify(INITIAL_MOVIES));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const login = (email: string, name?: string, role: 'user' | 'admin' = 'user') => {
@@ -338,9 +387,14 @@ export const MovieProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setActiveNavTab,
         toggleFavorite,
         toggleWatchlist,
+        clearWatchlist,
+        clearFavorites,
+        clearRecentlyViewed,
         markAsViewed,
+        removeFromRecentlyViewed,
         addSearchHistory,
         clearSearchHistory,
+        removeSearchHistoryItem,
         setFilter,
         resetFilters,
         addMovie,

@@ -33,6 +33,26 @@ export const AdminModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'stats'>('list');
   const [editingMovieId, setEditingMovieId] = useState<string | null>(null);
   const [isModalMaximized, setIsModalMaximized] = useState(false);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [movieToDelete, setMovieToDelete] = useState<{
+    id: string;
+    title: string;
+    poster?: string;
+    year?: number;
+    category?: string;
+  } | null>(null);
+  const [deleteToast, setDeleteToast] = useState<string | null>(null);
+
+  const handleDeleteMovie = (id: string, movieTitle: string) => {
+    deleteMovie(id);
+    setMovieToDelete(null);
+    if (editingMovieId === id) {
+      handleResetForm();
+      setActiveTab('list');
+    }
+    setDeleteToast(`"${movieTitle}" was permanently deleted from the website.`);
+    setTimeout(() => setDeleteToast(null), 4000);
+  };
 
   // Form State
   const [title, setTitle] = useState('');
@@ -322,35 +342,70 @@ export const AdminModal: React.FC = () => {
         </div>
 
         {/* Body content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
           
+          {/* Delete Toast Notification */}
+          {deleteToast && (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-3 text-xs font-semibold text-rose-300 flex items-center justify-between animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-rose-400" />
+                <span>{deleteToast}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteToast(null)}
+                className="text-xs text-rose-400 hover:text-white"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* TAB 1: LIST VIEW */}
           {activeTab === 'list' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">
-                  Showing {movies.length} titles in local database
-                </span>
-                <button
-                  onClick={() => {
-                    handleResetForm();
-                    setActiveTab('add');
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Add Movie / Series</span>
-                </button>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">
+                    Showing {movies.filter(m => m.title.toLowerCase().includes(adminSearch.toLowerCase()) || m.category.toLowerCase().includes(adminSearch.toLowerCase())).length} of {movies.length} titles
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={adminSearch}
+                    onChange={e => setAdminSearch(e.target.value)}
+                    placeholder="Search titles to edit or delete..."
+                    className="w-48 sm:w-64 rounded-lg bg-slate-900 border border-slate-700/80 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      handleResetForm();
+                      setActiveTab('add');
+                    }}
+                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 shrink-0"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Title</span>
+                  </button>
+                </div>
               </div>
 
               <div className="divide-y divide-slate-800 rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-                {movies.map(movie => (
+                {movies
+                  .filter(m => 
+                    !adminSearch.trim() || 
+                    m.title.toLowerCase().includes(adminSearch.toLowerCase()) || 
+                    m.category.toLowerCase().includes(adminSearch.toLowerCase())
+                  )
+                  .map(movie => (
                   <div key={movie.id} className="flex items-center justify-between p-3.5 hover:bg-slate-800/50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <img
                         src={movie.poster}
                         alt={movie.title}
-                        className="h-12 w-9 rounded object-cover bg-slate-950 shrink-0"
+                        className="h-12 w-9 rounded object-cover bg-slate-950 shrink-0 border border-slate-800"
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -380,22 +435,29 @@ export const AdminModal: React.FC = () => {
 
                     <div className="flex items-center gap-2 shrink-0 ml-4">
                       <button
+                        type="button"
                         onClick={() => startEdit(movie)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors"
+                        className="flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors text-xs font-medium"
                         title="Edit title details"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Edit</span>
                       </button>
+
                       <button
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to delete "${movie.title}"?`)) {
-                            deleteMovie(movie.id);
-                          }
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:bg-rose-600 hover:text-white transition-colors"
-                        title="Delete from catalog"
+                        type="button"
+                        onClick={() => setMovieToDelete({
+                          id: movie.id,
+                          title: movie.title,
+                          poster: movie.poster,
+                          year: movie.year,
+                          category: movie.category
+                        })}
+                        className="flex items-center gap-1 h-8 px-2.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-semibold transition-all shadow-sm"
+                        title={`Delete "${movie.title}" from catalog`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
@@ -776,21 +838,43 @@ export const AdminModal: React.FC = () => {
               </div>
 
               {/* Form buttons */}
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-800">
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-colors"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>{editingMovieId ? 'Save Title Changes' : 'Create & Publish Title'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('list')}
-                  className="rounded-lg bg-slate-800 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-700"
-                >
-                  Cancel
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 shadow transition-colors"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{editingMovieId ? 'Save Title Changes' : 'Create & Publish Title'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('list')}
+                    className="rounded-lg bg-slate-800 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                {editingMovieId && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setMovieToDelete({
+                        id: editingMovieId,
+                        title,
+                        poster,
+                        year,
+                        category
+                      })}
+                      className="flex items-center gap-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 px-3.5 py-2 text-xs font-bold transition-all shadow-sm"
+                      title="Permanently delete this movie from database"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Delete Movie</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </form>
           )}
@@ -868,6 +952,63 @@ export const AdminModal: React.FC = () => {
             Done
           </button>
         </div>
+
+        {/* High-Visibility Confirmation Modal Dialog for Delete */}
+        {movieToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+            <div 
+              className="w-full max-w-md rounded-2xl border border-rose-500/50 bg-[#0d121c] p-6 shadow-2xl space-y-4"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600/20 text-rose-400 border border-rose-500/40">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white">Delete Title from Website?</h3>
+                  <p className="text-xs text-rose-300 font-medium">This cannot be undone.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 rounded-xl bg-slate-900/90 p-3.5 border border-slate-800">
+                {movieToDelete.poster ? (
+                  <img src={movieToDelete.poster} alt={movieToDelete.title} className="h-16 w-12 rounded object-cover border border-slate-700 shrink-0 bg-slate-950" />
+                ) : (
+                  <div className="h-16 w-12 rounded bg-slate-800 flex items-center justify-center text-slate-500">
+                    <Film className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-white text-sm truncate">{movieToDelete.title}</h4>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {movieToDelete.year || 2025} · {movieToDelete.category || 'Movie'}
+                  </div>
+                  <p className="text-[11px] text-rose-400 mt-1 font-medium">
+                    Will be permanently removed from catalog, streams & downloads.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMovieToDelete(null)}
+                  className="rounded-lg bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMovie(movieToDelete.id, movieToDelete.title)}
+                  className="flex items-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-rose-950/50 transition-colors active:scale-95"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Yes, Delete Movie</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

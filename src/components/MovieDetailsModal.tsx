@@ -14,7 +14,10 @@ import {
   Minimize,
   Copy,
   Check,
-  Zap
+  Zap,
+  Trash2,
+  ShieldCheck,
+  Edit3
 } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
 import { Movie } from '../types/movie';
@@ -27,16 +30,20 @@ export const MovieDetailsModal: React.FC = () => {
     setPlayingMovie, 
     setTrailerMovie, 
     setDownloadMovie,
+    deleteMovie,
     movies,
     watchlist,
     favorites,
     toggleWatchlist,
     toggleFavorite,
-    markAsViewed
+    markAsViewed,
+    user,
+    setIsAdminOpen
   } = useMovies();
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!activeMovie) return null;
 
@@ -205,6 +212,34 @@ export const MovieDetailsModal: React.FC = () => {
                 <span className="text-indigo-300 font-medium">{activeMovie.type}</span>
               </div>
 
+              {/* Publisher Controls Banner */}
+              {user?.role === 'admin' && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
+                    <span className="text-amber-300 font-semibold">Publisher (Puru Kumar) Controls:</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAdminOpen(true)}
+                      className="flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 px-2 py-1 text-[11px] font-medium text-slate-200 transition-colors"
+                    >
+                      <Edit3 className="h-3 w-3 text-indigo-400" />
+                      <span>Admin Catalog</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex items-center gap-1 rounded bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 px-2 py-1 text-[11px] font-bold transition-all shadow-sm"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      <span>Delete Title</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons Row */}
               <div className="flex flex-wrap items-center gap-2.5 pt-2">
                 <button
@@ -264,6 +299,16 @@ export const MovieDetailsModal: React.FC = () => {
                 >
                   <Heart className={`h-3.5 w-3.5 ${isFavorited ? 'fill-rose-400' : ''}`} />
                   <span>{isFavorited ? 'Favorited' : 'Favorite'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-600 hover:text-white px-3 py-2 text-xs font-semibold text-rose-300 transition-all shadow-sm active:scale-95"
+                  title="Permanently delete this movie from website catalog"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                  <span>Delete Movie</span>
                 </button>
               </div>
 
@@ -361,6 +406,65 @@ export const MovieDetailsModal: React.FC = () => {
           )}
 
         </div>
+
+        {/* Delete Confirmation Modal Dialog */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+            <div 
+              className="w-full max-w-md rounded-2xl border border-rose-500/50 bg-[#0d121c] p-6 shadow-2xl space-y-4 text-left"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600/20 text-rose-400 border border-rose-500/40">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white">Delete Movie from Website</h3>
+                  <p className="text-xs text-rose-300 font-medium">Permanent removal from CineVault catalog</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 rounded-xl bg-slate-900/90 p-3.5 border border-slate-800">
+                <img
+                  src={activeMovie.poster}
+                  alt={activeMovie.title}
+                  className="h-16 w-12 rounded object-cover border border-slate-700 shrink-0 bg-slate-950"
+                />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-white text-sm truncate">{activeMovie.title}</h4>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {activeMovie.year} · {activeMovie.category} · {activeMovie.quality}
+                  </div>
+                  <p className="text-[11px] text-rose-400 mt-1 font-medium">
+                    This will remove all stream & download links from the site.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="rounded-lg bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteMovie(activeMovie.id);
+                    setShowDeleteConfirm(false);
+                    setActiveMovie(null);
+                  }}
+                  className="flex items-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-rose-950/50 transition-colors active:scale-95"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Yes, Delete Movie</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
