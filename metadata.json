@@ -1,0 +1,6 @@
+{
+  "name": "CineVault - Stream Portal",
+  "description": "Modern responsive movie and web-series catalog portal with verified legal streaming, downloads, trailers, instant multi-filter search, and admin management. Published by Puru Kumar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
